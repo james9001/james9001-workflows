@@ -1,0 +1,22 @@
+---
+name: Snyk Code Check (Node 18)
+run-name: Snyk Code Check (Node 18)
+on:
+  workflow_call:
+    secrets:
+      SNYKTOKEN:
+        required: true
+
+jobs:
+  Snyk-Code-Check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Run Snyk (Node 18)
+        run: |
+          docker run --rm \
+            -e SNYK_TOKEN=${{ secrets.SNYKTOKEN }} \
+            -v ${{ env.JOB_CONTAINER_NAME }}:/app \
+            snyk/snyk:node-18 snyk test \
+            --severity-threshold=high

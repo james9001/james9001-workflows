@@ -1,0 +1,53 @@
+---
+name: Build
+run-name: Build
+on:
+  workflow_call:
+    inputs:
+      image_registry_namespace:
+        required: true
+        type: string
+      image_registry_username:
+        required: true
+        type: string
+    secrets:
+      IMAGE_REGISTRY_PASSWORD:
+        required: true
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+      APPLICATION_NAME: ${{ github.event.repository.name }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Calculate variables
+        id: calculate_variables
+        run: |
+          echo "branchlatest=${BRANCH_NAME}_latest" >> $GITHUB_OUTPUT
+          echo "branchdatetime=${BRANCH_NAME}_$(TZ=Australia/Sydney date +"%Y-%m-%d-%H%M")" >> $GITHUB_OUTPUT
+      - name: Build docker image
+        run: |
+          docker build \
+            --build-arg BUILD_VERSION=${{ steps.calculate_variables.outputs.branchdatetime }} \
+            -t ${{ inputs.image_registry_namespace }}/${APPLICATION_NAME}:${{ steps.calculate_variables.outputs.branchdatetime }} \
+            .
+      - name: Tag docker image with the branch_latest tag
+        run: |
+          docker tag \
+            ${{ inputs.image_registry_namespace }}/${APPLICATION_NAME}:${{ steps.calculate_variables.outputs.branchdatetime }} \
+            ${{ inputs.image_registry_namespace }}/${APPLICATION_NAME}:${{ steps.calculate_variables.outputs.branchlatest }}
+      - name: Log in to container image registry
+        run: |
+          docker login ${{ inputs.image_registry_namespace }} \
+            --username ${{ inputs.image_registry_username }} --password ${{ secrets.IMAGE_REGISTRY_PASSWORD }}
+      - name: Push docker image to registry
+        run: |
+          docker image push -a \
+            ${{ inputs.image_registry_namespace }}/${APPLICATION_NAME}
+      - name: Git tag and push
+        run: |
+          git tag ${{ steps.calculate_variables.outputs.branchdatetime }} \
+            && git push --tags
