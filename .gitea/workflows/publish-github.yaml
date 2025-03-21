@@ -1,0 +1,16 @@
+---
+name: Publish to GitHub
+run-name: Publish to GitHub
+on:
+  workflow_dispatch:
+
+jobs:
+  Publish-To-Github:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Push to GitHub
+        run: |
+          git remote add github https://github.com/james9001/james9001-workflows.git
+          git push github
