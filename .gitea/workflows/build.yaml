@@ -10,9 +10,14 @@ on:
       image_registry_username:
         required: true
         type: string
+      deploy_callback_url:
+        required: false
+        type: string
     secrets:
       IMAGE_REGISTRY_PASSWORD:
         required: true
+      DEPLOY_CALLBACK_TOKEN:
+        required: false
 
 jobs:
   Build:
@@ -28,26 +33,36 @@ jobs:
         run: |
           echo "branchlatest=${BRANCH_NAME}_latest" >> $GITHUB_OUTPUT
           echo "branchdatetime=${BRANCH_NAME}_$(TZ=Australia/Sydney date +"%Y-%m-%d-%H%M")" >> $GITHUB_OUTPUT
-      - name: Build docker image
-        run: |
-          docker build \
-            --build-arg BUILD_VERSION=${{ steps.calculate_variables.outputs.branchdatetime }} \
-            -t ${{ inputs.image_registry_namespace }}/${APPLICATION_NAME}:${{ steps.calculate_variables.outputs.branchdatetime }} \
-            .
-      - name: Tag docker image with the branch_latest tag
-        run: |
-          docker tag \
-            ${{ inputs.image_registry_namespace }}/${APPLICATION_NAME}:${{ steps.calculate_variables.outputs.branchdatetime }} \
-            ${{ inputs.image_registry_namespace }}/${APPLICATION_NAME}:${{ steps.calculate_variables.outputs.branchlatest }}
-      - name: Log in to container image registry
-        run: |
-          docker login ${{ inputs.image_registry_namespace }} \
-            --username ${{ inputs.image_registry_username }} --password ${{ secrets.IMAGE_REGISTRY_PASSWORD }}
-      - name: Push docker image to registry
-        run: |
-          docker image push -a \
-            ${{ inputs.image_registry_namespace }}/${APPLICATION_NAME}
-      - name: Git tag and push
-        run: |
-          git tag ${{ steps.calculate_variables.outputs.branchdatetime }} \
-            && git push --tags
+      # - name: Build docker image
+      #   run: |
+      #     docker build \
+      #       --build-arg BUILD_VERSION=${{ steps.calculate_variables.outputs.branchdatetime }} \
+      #       -t ${{ inputs.image_registry_namespace }}/${APPLICATION_NAME}:${{ steps.calculate_variables.outputs.branchdatetime }} \
+      #       .
+      # - name: Tag docker image with the branch_latest tag
+      #   run: |
+      #     docker tag \
+      #       ${{ inputs.image_registry_namespace }}/${APPLICATION_NAME}:${{ steps.calculate_variables.outputs.branchdatetime }} \
+      #       ${{ inputs.image_registry_namespace }}/${APPLICATION_NAME}:${{ steps.calculate_variables.outputs.branchlatest }}
+      # - name: Log in to container image registry
+      #   run: |
+      #     docker login ${{ inputs.image_registry_namespace }} \
+      #       --username ${{ inputs.image_registry_username }} --password ${{ secrets.IMAGE_REGISTRY_PASSWORD }}
+      # - name: Push docker image to registry
+      #   run: |
+      #     docker image push -a \
+      #       ${{ inputs.image_registry_namespace }}/${APPLICATION_NAME}
+      # - name: Git tag and push
+      #   run: |
+      #     git tag ${{ steps.calculate_variables.outputs.branchdatetime }} \
+      #       && git push --tags
+      - name: Trigger deploy workflow if necessary
+        run: >
+          if [ -n "${{ inputs.deploy_callback_url }}" ]; then
+            curl --location '${{ inputs.deploy_callback_url }}' \
+              --header 'Content-Type: application/json' \
+              --header 'Authorization: Bearer ${{ secrets.DEPLOY_CALLBACK_TOKEN }}' \
+              --data '{
+                  "ref": "master"
+              }'
+          fi
