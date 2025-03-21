@@ -12,10 +12,6 @@ jobs:
         uses: actions/checkout@v4
       - name: Push to GitHub
         run: |
-          git config --global user.name "test"
-          echo $XDG_CONFIG_HOME
-          ls ~
-          ls -alh /
-          ls -alh /root
+          echo "${{ secrets.JAMES9001_GITHUB_CREDENTIALS }}" > /root/.git-credentials
           git remote add github https://github.com/james9001/james9001-workflows.git
           git push github
