@@ -4,7 +4,6 @@ name: Publish THIS to GitHub
 run-name: Publish THIS to GitHub
 on:
   workflow_dispatch:
-  workflow_call:
 
 jobs:
   Publish-To-Github:
