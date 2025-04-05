@@ -1,0 +1,16 @@
+---
+# This is a special case, all other workflows in this repo are templates for reusing
+name: Publish THIS to GitHub
+run-name: Publish THIS to GitHub
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  Publish-To-Github:
+    uses: ./github-publish.yaml
+    with:
+      github_user_name: james9001
+      github_user_email: james9001@james9001.net
+    secrets:
+      GITHUB_USER_CREDENTIALS: ${{ secrets.JAMES9001_GITHUB_CREDENTIALS }}

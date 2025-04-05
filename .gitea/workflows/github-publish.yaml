@@ -1,0 +1,32 @@
+---
+name: Publish to GitHub
+run-name: Publish to GitHub
+on:
+  workflow_call:
+    inputs:
+      github_user_name:
+        required: true
+        type: string
+      github_user_email:
+        required: true
+        type: string
+    secrets:
+      GITHUB_USER_CREDENTIALS:
+        required: true
+
+jobs:
+  Publish-To-Github:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push to GitHub
+        run: |
+          git config --global credential.helper store
+          git config --global user.name ${{ inputs.github_user_name }}
+          git config --global user.email ${{ inputs.github_user_email }}
+          echo "${{ secrets.GITHUB_USER_CREDENTIALS }}" > /root/.git-credentials
+          git remote add github https://github.com/${{ inputs.github_user_name }}/${{ github.event.repository.name }}.git
+          git push github
