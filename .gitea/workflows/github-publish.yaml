@@ -29,4 +29,4 @@ jobs:
           git config --global user.email ${{ inputs.github_user_email }}
           echo "${{ secrets.GITHUB_USER_CREDENTIALS }}" > /root/.git-credentials
           git remote add github https://github.com/${{ inputs.github_user_name }}/${{ github.event.repository.name }}.git
-          git push github
+          git push github --follow-tags
