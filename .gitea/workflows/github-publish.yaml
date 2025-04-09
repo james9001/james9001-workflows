@@ -10,6 +10,9 @@ on:
       github_user_email:
         required: true
         type: string
+      github_repo_owner:
+        required: true
+        type: string
     secrets:
       GITHUB_USER_CREDENTIALS:
         required: true
@@ -29,5 +32,5 @@ jobs:
           git config --global user.name ${{ inputs.github_user_name }}
           git config --global user.email ${{ inputs.github_user_email }}
           echo "${{ secrets.GITHUB_USER_CREDENTIALS }}" > /root/.git-credentials
-          git remote add github https://github.com/${{ inputs.github_user_name }}/${{ github.event.repository.name }}.git
+          git remote add github https://github.com/${{ inputs.github_repo_owner }}/${{ github.event.repository.name }}.git
           git push github --follow-tags
